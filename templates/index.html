@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+    <title>Symmetric Encryption</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
+    <style>
+        body {
+            padding: 2em;
+        }
+        .ui.container {
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div class="ui container">
+        <h2 class="ui header">Encrypt / Decrypt :3</h2>
+        <form class="ui form" method="post">
+            <div class="field">
+                <label>Message</label>
+                <textarea name="message" rows="4"></textarea>
+            </div>
+            <div class="field">
+                <label>Password</label>
+                <input type="password" name="password">
+            </div>
+            <button class="ui blue button" type="submit" name="action" value="encrypt">Encrypt</button>
+            <button class="ui green button" type="submit" name="action" value="decrypt">Decrypt</button>
+        </form>
+        {% if result %}
+            <div class="ui segment">
+                <h3 class="ui header">Result</h3>
+                <p>{{ result }}</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

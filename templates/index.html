@@ -1,38 +1,310 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
     <title>Symmetric Encryption</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Lora:ital,wght@0,400..700;1,400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Roboto:ital,wght@0,100..900;1,100..900&family=Sedan:ital@0;1&display=swap" rel="stylesheet">
     <style>
         body {
-            padding: 2em;
+            font-family: 'Roboto', sans-serif;
+            background-color: rgb(225, 226, 228);
         }
-        .ui.container {
-            max-width: 600px;
+        .ui.textarea {
+            min-height: 200px !important;
         }
     </style>
 </head>
 <body>
-    <div class="ui container">
-        <h2 class="ui header">Encrypt / Decrypt :3</h2>
-        <form class="ui form" method="post">
-            <div class="field">
-                <label>Message</label>
-                <textarea name="message" rows="4"></textarea>
-            </div>
-            <div class="field">
-                <label>Password</label>
-                <input type="password" name="password">
-            </div>
-            <button class="ui blue button" type="submit" name="action" value="encrypt">Encrypt</button>
-            <button class="ui green button" type="submit" name="action" value="decrypt">Decrypt</button>
-        </form>
-        {% if result %}
-            <div class="ui segment">
-                <h3 class="ui header">Result</h3>
-                <p>{{ result }}</p>
-            </div>
-        {% endif %}
+
+<div id="alert-box" class="ui negative message" style="display: none; position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 9999;">
+    <i class="close icon" onclick="hideAlert()"></i>
+    <div class="header">Error</div>
+    <p id="alert-message">Something went wrong!</p>
+</div>
+
+<div class="ui container">
+    <div class="ui basic segment" style="padding-top: 30px;">
+        <h1 class="ui center aligned header">Symmetric Encryption Demo</h1>
     </div>
+
+    <div class="ui segment">
+        <div class="ui stackable two column divided grid">
+            <div class="ui ten wide column">
+                <h4 class="ui header">Encryption/Decryption</h4>
+                <div class="ui grid">
+                    <div class="eight wide column">
+                        <div class="ui form">
+                            <div class="field">
+                                <label for="plaintext">Plaintext</label>
+                                <textarea id="plaintext" class="ui textarea" placeholder="Enter the text you want to encrypt here!"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="eight wide column">
+                        <div class="ui form">
+                            <div class="field">
+                                <label for="ciphertext">Ciphertext</label>
+                                <textarea id="ciphertext" class="ui textarea" placeholder="Enter the text you want to decrypt here!"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ui form" style="margin-top: 20px;">
+                    <div class="field">
+                        <label for="password">Password</label>
+                        <input type="text" id="password" placeholder="Enter a password to generate a key with!">
+                    </div>
+                </div>
+                <div class="ui buttons" style="margin-top: 10px;">
+                    <button class="ui orange button" onclick="generateKey()">Generate Key</button>
+                    <button class="ui teal button" onclick="generateRandomKey()">Random Key</button>
+                </div>
+                
+                <div class="ui form" style="margin-top: 20px;">
+                    <div class="field">
+                        <label for="key">Key</label>
+                        <input type="text" id="key" placeholder="Enter your 32-byte key here. Make sure it's the same for both encryption and decryption!">
+                    </div>
+                </div>
+
+                <div class="ui buttons" style="margin-top: 10px;">
+                    <button class="ui primary button" onclick="encrypt()">Encrypt</button>
+                    <button class="ui red button" onclick="decrypt()">Decrypt</button>
+                </div>
+            </div>
+            
+            <div class="ui six wide column">
+                <div class="host-box">
+                    <h4 class="ui header">Transmission Simulation</h4>
+                    <div class="ui basic segment" id="simulation-area">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 150px;">
+                            <div id="host-a" style="font-weight: bold;">Host A</div>
+                            
+                            <div id="host-b" style="font-weight: bold;">Host B</div>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: center;gap: 185px;">
+                            <div id="packet" style="transition: transform 0.5s ease;">📦</div>
+                            <div id="packet" style="transition: transform 0.5s ease;"></div>
+                        </div>
+                        <div style="margin-top: 20px; text-align: center;">
+                            <button id="nextstep" class="ui blue button" onclick="nextStep()">Next Step</button>
+                            <button class="ui red button" onclick="tamperPacket()">Simulate Error</button>
+                        </div>
+                        <div id="step-desc" style="margin-top: 10px; text-align: center; word-wrap: break-all; overflow-wrap: anywhere;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        
+    <div id="history-log" class="ui segment"">
+        <h4 class="ui header">History</h4>
+        <div id="log-entries" class="ui list" style="height: 260px; overflow-y: auto; padding: 2px;">
+        
+        </div>
+    </div>
+
+    <div class="ui hidden divider"></div>
+
+
+    <script>
+        function addToHistory(plaintext, ciphertext, key, type, color) {
+            const entry = document.createElement('div');
+            entry.classList.add('item');
+            entry.innerHTML = `
+            <div class="item ui segments">
+                <div class="ui ${color} inverted segment" style="padding-top: 6px; padding-bottom: 6px; padding-left: 10px;">
+                    <div class="ui small header">${type}</div>
+                </div>
+                <div class="ui segment" style="padding: 10px;">
+                    <div class="ui list" padding: 0px;">
+                        <div class="item" style="word-wrap: break-all;"><strong>Plaintext:</strong> ${plaintext}</div>
+                        <div class="item" style="word-wrap: break-all;"><strong>Ciphertext:</strong> ${ciphertext}</div>
+                        <div class="item" style="word-wrap: break-all;"><strong>Key:</strong> ${key}</div>
+                    </div>
+                </div>
+            </div>
+            `;
+            document.getElementById('log-entries').prepend(entry);
+        }
+
+        async function generateKey() {
+            const password = document.getElementById('password').value;
+            const res = await fetch('/generate_key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+            const data = await res.json();
+            if (data.key) {
+                document.getElementById('key').value = data.key;
+            } else {
+                showAlert(data.error || 'Something went wrong while generating the key!');
+            }
+        }
+
+        function generateRandomKey() {
+            const array = new Uint8Array(32);
+            window.crypto.getRandomValues(array);
+            const binary = String.fromCharCode.apply(null, array);
+            let base64 = btoa(binary);
+
+            document.getElementById('key').value = base64;
+        }
+
+        async function encrypt() {
+            const plaintext = document.getElementById('plaintext').value;
+            const key = document.getElementById('key').value;
+            if (!plaintext) {
+                showAlert('Please enter some text to encrypt!');
+                return;
+            }
+            if (!key) {
+                showAlert('Please enter a key for encryption!');
+                return;
+            }
+            if (plaintext.length > 1000) {
+                showAlert('Plaintext is too long! Please limit it to 1000 characters.');
+                return;
+            }
+            const res = await fetch('/encrypt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plaintext, key })
+            });
+            const data = await res.json();
+            if (data.ciphertext) {
+                document.getElementById('ciphertext').value = data.ciphertext;
+                addToHistory(plaintext, data.ciphertext, key, "Encryption", "blue");
+                step = 0;
+                packet = '';
+                document.getElementById('packet').style.transform = 'translateX(0)';
+                document.getElementById('step-desc').innerText = '';
+            } else {
+                showAlert(data.error || 'Something went wrong while encrypting!');
+            }
+        }
+
+        async function decrypt() {
+            const ciphertext = document.getElementById('ciphertext').value;
+            const key = document.getElementById('key').value;
+            if (!ciphertext) {
+                showAlert('Please enter some text to decrypt!');
+                return;
+            }
+            if (!key) {
+                showAlert('Please enter a key for decryption!');
+                return;
+            }
+            if (ciphertext.length > 1000) {
+                showAlert('Ciphertext is too long! Please limit it to 1000 characters.');
+                return;
+            }
+            const res = await fetch('/decrypt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ciphertext, key })
+            });
+            const data = await res.json();
+            if (data.plaintext) {
+                document.getElementById('plaintext').value = data.plaintext;
+                addToHistory(data.plaintext, ciphertext, key, "Decryption", "red");
+                step = 0;
+                packet = '';
+                document.getElementById('packet').style.transform = 'translateX(0)';
+                document.getElementById('step-desc').innerText = '';
+            } else {
+                showAlert(data.error || 'Something went wrong while decrypting! Please check your key and ciphertext.');
+            }
+        }
+
+        let step = 0;
+        let packet = '';
+        let simkey = '';
+
+        function nextStep() {
+            const desc = document.getElementById('step-desc');
+            const packetEl = document.getElementById('packet');
+            switch (step) {
+                case 0:
+                    packet = document.getElementById('ciphertext').value;
+                    simkey = document.getElementById('key').value;
+                    if (!packet || !simkey) {
+                        showAlert("Make sure you've encrypted a message first!");
+                        return;
+                    }
+                    desc.innerText = "Host A is preparing the encrypted packet...\n\n\nPacket:\n" + packet + "\n\nKey:\n" + simkey;
+                    break;
+                case 1:
+                    desc.innerText = "Host A is sending the packet across the network...\n\n\nPacket:\n" + packet + "\n\nKey:\n" + simkey;
+                    packetEl.style.transform = "translateX(190px)";
+                    break;
+                case 2:
+                    desc.innerText = "Host B has received the packet. Attempting decryption...\n\n\nPacket:\n" + packet + "\n\nKey:\n" + simkey;
+                    break;
+                case 3:
+                    simulateDecryption();
+                    document.getElementById('nextstep').innerText = "Retry";
+                    break;
+                default:
+                    step = -1;
+                    document.getElementById('nextstep').innerText = "Next Step";
+                    desc.innerText = "";
+                    packetEl.style.transform = "translateX(0)";
+                    break;
+            }
+            step++;
+        }
+
+        function simulateDecryption() {
+            const desc = document.getElementById('step-desc');
+            fetch('/decrypt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ciphertext: packet, key: simkey })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.plaintext) {
+                    desc.innerText = "Success! Host B decrypted the message:\n" + data.plaintext + "\n\nPacket:\n" + packet + "\n\nKey:\n" + simkey;
+                } else {
+                    desc.innerText = "Oh no! Decryption failed: " + "Invalid ciphertext or key!\n\n\nPacket:\n" + packet + "\n\nKey:\n" + simkey;
+                }
+            });
+        }
+
+        function tamperPacket() {
+            if (!packet) {
+                showAlert("No packet to tamper with. Please encrypt a message first!");
+                return;
+            }
+            let index = Math.floor(Math.random() * packet.length);
+            let chars = packet.split("");
+            chars[index] = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+            packet = chars.join("");
+            showAlert("The packet got corrupted during transmission.");
+            document.getElementById('step-desc').innerText = "Packet was corrupted!\n\n\nPacket:\n" + packet + "\n\nKey:\n" + simkey;
+        }
+    
+        function showAlert(message) {
+            const box = document.getElementById("alert-box");
+            const msg = document.getElementById("alert-message");
+            msg.innerText = message;
+            box.style.display = "block";
+            setTimeout(() => {
+                box.style.display = "none";
+            }, 5000);
+        }
+        function hideAlert() {
+            document.getElementById("alert-box").style.display = "none";
+        }
+    </script>
+
 </body>
 </html>

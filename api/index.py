@@ -3,8 +3,7 @@ from cryptography.fernet import Fernet
 import base64
 import hashlib
 
-template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-app = Flask(__name__, template_folder=template_dir)
+app = Flask(__name__)
 
 @app.route('/generate_key', methods=['POST'])
 def generate_key_route():

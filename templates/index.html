@@ -16,6 +16,10 @@
         .ui.textarea {
             min-height: 200px !important;
         }
+
+        #packets {
+            gap: 50%;
+        }
     </style>
 </head>
 <body>
@@ -28,7 +32,7 @@
 
 <div class="ui container">
     <div class="ui basic segment" style="padding-top: 30px;">
-        <h1 class="ui center aligned header">Symmetric Encryption Demo</h1>
+        <h1 class="ui center aligned header">Symmetric Encryption</h1>
     </div>
 
     <div class="ui segment">
@@ -81,20 +85,25 @@
             <div class="ui six wide column">
                 <div class="host-box">
                     <h4 class="ui header">Transmission Simulation</h4>
-                    <div class="ui basic segment" id="simulation-area">
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 150px;">
-                            <div id="host-a" style="font-weight: bold;">Host A</div>
-                            
-                            <div id="host-b" style="font-weight: bold;">Host B</div>
-                        </div>
-                        <div style="display: flex; align-items: center; justify-content: center;gap: 185px;">
-                            <div id="packet" style="transition: transform 0.5s ease;">📦</div>
-                            <div id="packet" style="transition: transform 0.5s ease;"></div>
+                    <div class="ui basic center aligned segment" style="display: flex; flex-direction: column; align-items: center;" id="simulation-area">
+                        <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
+                            <div class="ui center aligned basic segment" style="margin: 0px;">
+                                <i class="desktop icon" style="margin: 0;"></i>
+                                <div id="host-a" style="font-weight: bold;">Host A</div>
+                            </div>
+                            <div class="parent" style="justify-self: flex-start; flex-grow: 1;">
+                                <div class="slider" id="packet" style="display: flex; transition: transform 0.5s ease; width: 1px; padding: -10px; align-items: center; justify-content: center;">📦</div>
+                            </div>
+                            <div class="ui center aligned basic segment" style="margin: 0px;">
+                                <i class="desktop icon" style="margin: 0;"></i>
+                                <div id="host-b" style="font-weight: bold;">Host B</div>
+                            </div>
                         </div>
                         <div style="margin-top: 20px; text-align: center;">
                             <button id="nextstep" class="ui blue button" onclick="nextStep()">Next Step</button>
                             <button class="ui red button" onclick="tamperPacket()">Simulate Error</button>
                         </div>
+                        <div class="ui divider"></div>
                         <div id="step-desc" style="margin-top: 10px; text-align: center; word-wrap: break-all; overflow-wrap: anywhere;"></div>
                     </div>
                 </div>
@@ -228,6 +237,14 @@
         let packet = '';
         let simkey = '';
 
+        function slide(percent) {
+            const parent = document.querySelector('.parent');
+            const slider = document.querySelector('.slider');
+            const parentWidth = parent.offsetWidth;
+            // percent is from 0 to 100, representing % of parent width
+            slider.style.transform = `translateX(calc(${parentWidth}px * ${percent} / 100))`;
+        }
+
         function nextStep() {
             const desc = document.getElementById('step-desc');
             const packetEl = document.getElementById('packet');
@@ -239,14 +256,17 @@
                         showAlert("Make sure you've encrypted a message first!");
                         return;
                     }
-                    desc.innerText = "Host A is preparing the encrypted packet...\n\n\nPacket:\n" + packet + "\n\nKey:\n" + simkey;
+                    desc.innerText = "Host A is encrypting the message with the key...\n\n\nPacket:\n" + packet + "\n\nKey:\n" + simkey;
                     break;
                 case 1:
                     desc.innerText = "Host A is sending the packet across the network...\n\n\nPacket:\n" + packet + "\n\nKey:\n" + simkey;
-                    packetEl.style.transform = "translateX(190px)";
+                    // packetEl.style.transform = "translateX(50)";
+                    slide(50);
                     break;
                 case 2:
                     desc.innerText = "Host B has received the packet. Attempting decryption...\n\n\nPacket:\n" + packet + "\n\nKey:\n" + simkey;
+                    // packetEl.style.transform = "translateX(100)";
+                    slide(100);
                     break;
                 case 3:
                     simulateDecryption();

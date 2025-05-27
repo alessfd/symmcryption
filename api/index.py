@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, jsonify
+from vercel_wsgi import handle_request
 from cryptography.fernet import Fernet
 import base64
 import hashlib
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='../templates')
 
 @app.route('/generate_key', methods=['POST'])
 def generate_key_route():
@@ -24,6 +25,9 @@ def generate_key(password):
 @app.route('/')
 def index():
     return render_template('index.html')
+
+def handler(environ, start_response):
+    return handle_request(app, environ, start_response)
 
 @app.route('/encrypt', methods=['POST'])
 def encrypt():

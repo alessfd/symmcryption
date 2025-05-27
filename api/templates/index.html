@@ -79,6 +79,7 @@
                 <div class="ui buttons" style="margin-top: 10px;">
                     <button class="ui primary button" onclick="encrypt()">Encrypt</button>
                     <button class="ui red button" onclick="decrypt()">Decrypt</button>
+                    <button class="ui grey button" onclick="clearAll()">Clear</button>
                 </div>
             </div>
             
@@ -310,6 +311,19 @@
             packet = chars.join("");
             showAlert("The packet got corrupted during transmission.");
             document.getElementById('step-desc').innerText = "Packet was corrupted!\n\n\nPacket:\n" + packet + "\n\nKey:\n" + simkey;
+        }
+
+        function clearAll() {
+            document.getElementById('plaintext').value = '';
+            document.getElementById('ciphertext').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('key').value = '';
+            document.getElementById('step-desc').innerText = '';
+            document.getElementById('packet').style.transform = 'translateX(0)';
+            document.getElementById('nextstep').innerText = 'Next Step';
+            step = 0;
+            packet = '';
+            simkey = '';
         }
     
         function showAlert(message) {

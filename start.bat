@@ -1,4 +1,4 @@
 @echo off
 pip install -r requirements.txt
 cls
-flask --app app run
+flask --app api/index run
